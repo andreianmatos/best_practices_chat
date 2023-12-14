@@ -1,6 +1,9 @@
 let textLines = [];
 let userInput = '';
 
+let temperatureSlider;
+let maxLengthSlider;
+
 const sketch = (p) => {
     let canvas;
     let input;
@@ -22,10 +25,24 @@ const sketch = (p) => {
         input.position(posX, posY);
         input.size(inputWidth, inputHeight);
         input.changed(handleInput); // Trigger the function on pressing Enter
+
+        // temperature slider
+        const sliderWidth = 150;
+        const sliderHeight = 20;
+        const sliderPosX = (windowWidth - sliderWidth) / 2;
+        const sliderPosY = (windowHeight + inputHeight) / 2 + 20;
+        // from more predictive to more random
+        temperatureSlider = p.createSlider(0.01, 1, 0.5, 0.01); 
+        temperatureSlider.position(sliderPosX, sliderPosY);
+        temperatureSlider.size(sliderWidth, sliderHeight);
+         // size slider
+         maxLengthSlider = p.createSlider(10, 300, 30, 10); 
+         maxLengthSlider.position(sliderPosX, sliderPosY+20);
+         maxLengthSlider.size(sliderWidth, sliderHeight+20);
     };
 
     p.draw = () => {
-        p.background(40);        
+        p.background(30);        
 
         for (let i = 0; i < textLines.length; i++) {
             let textData = textLines[i];
@@ -73,16 +90,23 @@ const sketch = (p) => {
 };
 
 new p5(sketch);
-
 async function generateText(promptText) {
     console.log(promptText);
     try {
+
         const HF_API_TOKEN = "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";
         const model = "blasees/gpt2_bestpractices";
-        const data = { inputs: promptText || " " };
 
-        console.log("doing inference with prompt...");
-        console.log(promptText);
+        const temperature = temperatureSlider.value();
+        const maxLength = maxLengthSlider.value();
+
+        const data = { 
+            inputs: promptText || " " ,
+            parameters: {
+                temperature: temperature,
+                max_length: maxLength
+            }
+        };
 
         const response = await fetch(
             `https://api-inference.huggingface.co/models/${model}`,
@@ -94,11 +118,13 @@ async function generateText(promptText) {
         );
         const result = await response.json();
 
-        console.log("generated....");
-        console.log(result[0]["generated_text"]);
+        const generatedText = result[0]["generated_text"];
 
-        // Store the generated text and its scroll position separately for each line
-        let lines = result[0]["generated_text"].split('\n');
+        // Remove the promptText from the beginning of the generated text if it exists
+        const formattedText = generatedText.startsWith(promptText) ? generatedText.substring(promptText.length) : generatedText;
+
+        // Store the formatted generated text and its scroll position separately for each line
+        let lines = formattedText.split('\n');
         for (let i = 0; i < lines.length; i++) {
             textLines.push({ text: lines[i], textY: 0, isInput: false });
         }
