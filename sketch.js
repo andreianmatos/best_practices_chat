@@ -1,5 +1,6 @@
 let textLines = [];
 let userInput = '';
+let errorMessage = '';
 
 let temperatureSlider;
 let maxLengthSlider;
@@ -42,7 +43,11 @@ const sketch = (p) => {
     };
 
     p.draw = () => {
-        p.background(30);        
+        p.background(30);     
+        
+        // Display error message on the screen
+        p.fill(255, 0, 0);
+        p.text(errorMessage, 20, p.height - 50);
 
         for (let i = 0; i < textLines.length; i++) {
             let textData = textLines[i];
@@ -90,46 +95,69 @@ const sketch = (p) => {
 };
 
 new p5(sketch);
-async function generateText(promptText) {
-    console.log(promptText);
-    try {
 
+async function generateText(promptText) {
+
+    console.log(promptText);
+    errorMessage = ''; 
+
+    try {
         const HF_API_TOKEN = "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";
         const model = "blasees/gpt2_bestpractices";
 
         const temperature = temperatureSlider.value();
         const maxLength = maxLengthSlider.value();
 
-        const data = { 
-            inputs: promptText || " " ,
+        const data = {
+            inputs: promptText || " ",
             parameters: {
                 temperature: temperature,
                 max_length: maxLength
             }
         };
 
-        const response = await fetch(
-            `https://api-inference.huggingface.co/models/${model}`,
-            {
-                headers: { "Authorization": `Bearer ${HF_API_TOKEN}` },
-                method: "POST",
-                body: JSON.stringify(data),
+        let result; // Declare result outside the try block
+
+        try {
+            const response = await fetch(
+                `https://api-inference.huggingface.co/models/${model}`,
+                {
+                    headers: { "Authorization": `Bearer ${HF_API_TOKEN}` },
+                    method: "POST",
+                    body: JSON.stringify(data),
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
             }
-        );
-        const result = await response.json();
 
-        const generatedText = result[0]["generated_text"];
+            result = await response.json(); // Assign value to result
 
-        // Remove the promptText from the beginning of the generated text if it exists
-        const formattedText = generatedText.startsWith(promptText) ? generatedText.substring(promptText.length) : generatedText;
+            // Process the result as needed
 
-        // Store the formatted generated text and its scroll position separately for each line
-        let lines = formattedText.split('\n');
-        for (let i = 0; i < lines.length; i++) {
-            textLines.push({ text: lines[i], textY: 0, isInput: false });
+            // Check if result is defined before using it
+            if (result) {
+                const generatedText = result[0]["generated_text"];
+                // Remove the promptText from the beginning of the generated text if it exists
+                const formattedText = generatedText.startsWith(promptText) ? generatedText.substring(promptText.length) : generatedText;
+
+                // Store the formatted generated text and its scroll position separately for each line
+                let lines = formattedText.split('\n');
+                for (let i = 0; i < lines.length; i++) {
+                    textLines.push({ text: lines[i], textY: 0, isInput: false });
+                }
+            } else {
+                // Handle the case where result is not defined
+                console.error("No result available.");
+            }
+        } catch (error) {
+            // Handle errors here
+            errorMessage = `An error occurred: ${error.message}`;
+            console.error(errorMessage);
         }
-
     } catch (error) {
-        console.error("Error:", error);
+        errorMessage = `Error: ${error}`;
+        console.error(errorMessage);
     }
 }
