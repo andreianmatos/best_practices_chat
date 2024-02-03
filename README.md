@@ -14,7 +14,7 @@ Finetuned hugging face's GPT-2 model with webscraped transcripts from youtube pl
     - `StyleGAN.ipynb`: Jupyter Notebook for training and generating textures using Style GAN.
   - **generated_texts/**
     - **generated_chats_2/**
-      - `generated_*.txt`:  Webscraoed text files of the best_practices' youtube playlists.
+      - `generated_*.txt`:  Webscraped text files of the best_practices' youtube playlists.
     - **generated_proposal/**
       - `generated_*.txt`: Text files of the best_practices' proposals.
         
