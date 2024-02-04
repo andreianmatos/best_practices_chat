@@ -155,11 +155,11 @@ async function generateText(promptText) {
             // Handle errors here
             errorMessage = `Error while generating text for prompt "${promptText}": ${error.message}`;
             console.error(errorMessage);
-            textLines.push({ text: errorMessage, textY: 0, isInput: false }); // Display error in the text stream
+            textLines.push({ text: errorMessage, textY: 0, isInput: false, isError: true }); // Display error in the text stream with isError flag
         }
     } catch (error) {
         errorMessage = `Error: ${error}`;
         console.error(errorMessage);
-        textLines.push({ text: errorMessage, textY: 0, isInput: false }); // Display error in the text stream
+        textLines.push({ text: errorMessage, textY: 0, isInput: false, isError: true }); // Display error in the text stream with isError flag
     }
 }
