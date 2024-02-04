@@ -129,7 +129,7 @@ async function generateText(promptText) {
             );
 
             if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
+                throw new Error(`Server temporarily unavailable :( Please, try again in a few seconds!`);
             }
 
             result = await response.json(); // Assign value to result
@@ -153,11 +153,13 @@ async function generateText(promptText) {
             }
         } catch (error) {
             // Handle errors here
-            errorMessage = `An error occurred: ${error.message}`;
+            errorMessage = `Error while generating text for prompt "${promptText}": ${error.message}`;
             console.error(errorMessage);
+            textLines.push({ text: errorMessage, textY: 0, isInput: false }); // Display error in the text stream
         }
     } catch (error) {
         errorMessage = `Error: ${error}`;
         console.error(errorMessage);
+        textLines.push({ text: errorMessage, textY: 0, isInput: false }); // Display error in the text stream
     }
 }
