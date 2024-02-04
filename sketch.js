@@ -35,18 +35,20 @@ const sketch = (p) => {
         input.size(inputWidth, inputHeight);
         input.changed(handleInput);
     
-        // temperature slider
+         // temperature slider
         const sliderWidth = 140;
         const sliderHeight = 20;
         const sliderPosY = windowHeight - inputHeight - 30;
-        // from more predictive to more random
         temperatureSlider = p.createSlider(0.01, 1, 0.5, 0.01);
         temperatureSlider.position(windowWidth - inputWidth, sliderPosY);
         temperatureSlider.size(sliderWidth, sliderHeight);
+        createLabel('TEMPERATURE', windowWidth - inputWidth + 10, sliderPosY + sliderHeight + 10);
+
         // size slider
         maxLengthSlider = p.createSlider(10, 300, 30, 10);
         maxLengthSlider.position(inputWidth - sliderWidth, sliderPosY);
         maxLengthSlider.size(sliderWidth, sliderHeight);
+        createLabel('MAX LENGTH', inputWidth - sliderWidth + 15, sliderPosY + sliderHeight + 10);
 
         // Create the canvas
         canvas = p.createCanvas(windowWidth - 20, windowHeight - inputHeight - 100); // Adjust canvas height
@@ -57,7 +59,6 @@ const sketch = (p) => {
         p.fill(255);
         
     };
-    
 
     p.draw = () => {
         p.background(0);
@@ -123,6 +124,16 @@ const sketch = (p) => {
         }
     }
 
+    function createLabel(labelText, x, y) {
+        const label = document.createElement('label');
+        label.innerText = labelText;
+        label.style.position = 'absolute';
+        label.style.left = `${x}px`;
+        label.style.top = `${y}px`;
+        label.style.color = 'white'; 
+        document.getElementById('sketch-container').appendChild(label);
+    }
+    
     // Updated scrollToBottom function
     function scrollToBottom() {
         scrollOffset = 0;
