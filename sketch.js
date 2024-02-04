@@ -95,7 +95,6 @@ const sketch = (p) => {
             y -= lines.length * 30;
         }
 
-        const currentLine = textLines[index];
         const lineHeight = p.textAscent() + p.textDescent();
         
         y +=  p.lerp(scrollOffset * lineHeight, (scrollOffset + 1) * lineHeight, 0.1);
@@ -134,10 +133,17 @@ const sketch = (p) => {
         scrollOffset -= event.delta / 100;
     };
     
+    // for horizontal scroll on the canvas
     p.mouseDragged = () => {
-        horizontalScrollOffset += p.mouseX - p.pmouseX;
-    };
-    
+        if (
+            p.mouseX > 10 && 
+            p.mouseX < canvas.width - 10 &&
+            p.mouseY > 10 && 
+            p.mouseY < canvas.height - 10 
+        ) {
+            horizontalScrollOffset += p.mouseX - p.pmouseX;
+        }
+    };   
     
 };
 
@@ -180,9 +186,10 @@ async function generateText(promptText) {
         // Check if result is defined 
         if (result) {
             const generatedText = result[0]["generated_text"];
+            const formattedText = generatedText.startsWith(promptText) ? generatedText.substring(promptText.length) : generatedText;
 
             // Store the formatted generated text
-            textLines.push({ text: generatedText, isInput: false, isError: false }); // Generated text
+            textLines.push({ text: formattedText, isInput: false, isError: false }); // Generated text
         } else {
             throw new Error();
         }
