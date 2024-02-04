@@ -97,11 +97,12 @@ new p5(sketch);
 
 async function generateText(promptText) {
 
-    console.log(promptText);
     errorMessage = 'Server temporarily unavailable :( Please, try again in a few seconds!'; 
-
+    
     const HF_API_TOKEN = "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";
-    const model = "blasees/gpt2_bestpractices";
+    const model = "blasees/gpt2_bestpractices_chats";
+
+    let result; 
 
     const temperature = temperatureSlider.value();
     const maxLength = maxLengthSlider.value();
@@ -114,8 +115,6 @@ async function generateText(promptText) {
         }
     };
 
-    let result; // Declare result outside the try block
-
     try {
         const response = await fetch(
             `https://api-inference.huggingface.co/models/${model}`,
@@ -127,8 +126,7 @@ async function generateText(promptText) {
         );
 
         if (!response.ok) {
-            console.error('Inference response not ok. Possible API still loading.');
-            throw new Error(`Error found :( Please, try again in a few seconds!`);
+            throw new Error();
         }
 
         result = await response.json(); // Assign value to result
@@ -145,12 +143,11 @@ async function generateText(promptText) {
                 textLines.push({ text: lines[i], textY: 0, isInput: false, isError: false });
             }
         } else {
-            // Handle the case where result is not defined
-            console.error('Inference response not ok. Possible API still loading.');
-            throw new Error(`Error found :( Please, try again in a few seconds!`);
+            throw new Error();
         }
+        
     } catch (error) {
-        console.error('POST failed. Likely an error with code for POST.');
+        console.error('POST failed. Possible API still loading. If persists, check inference details.');
         textLines.push({ text: errorMessage, textY: 0, isInput: false, isError: true}); 
     }
 }
