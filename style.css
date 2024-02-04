@@ -10,6 +10,7 @@ input {
   font-size: 16px;
 }
 
+/* sliders */
 input[type=range] {
     width: 100%;
     margin: 8px 0;

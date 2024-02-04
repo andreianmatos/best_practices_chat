@@ -19,12 +19,11 @@ const sketch = (p) => {
         const windowWidth = window.innerWidth;
         const windowHeight = window.innerHeight;
     
-        // Create the input div
         inputDiv = document.createElement('div');
         inputDiv.id = 'input-container';
         document.body.appendChild(inputDiv);
     
-        // Create the input box inside the input div
+        // the input text box
         const inputWidth = windowWidth - 100;
         const inputHeight = 30;
         const posX = (windowWidth - inputWidth) / 2;
@@ -38,19 +37,19 @@ const sketch = (p) => {
          // temperature slider
         const sliderWidth = 140;
         const sliderHeight = 20;
-        const sliderPosY = windowHeight - inputHeight - 30;
+        const sliderPosY = windowHeight - inputHeight - 40;
         temperatureSlider = p.createSlider(0.01, 1, 0.5, 0.01);
         temperatureSlider.position(windowWidth - inputWidth, sliderPosY);
         temperatureSlider.size(sliderWidth, sliderHeight);
-        createLabel('TEMPERATURE', windowWidth - inputWidth + 10, sliderPosY + sliderHeight + 10);
+        createLabel('temperature', windowWidth - inputWidth + 25, sliderPosY + sliderHeight + 15);
 
         // size slider
         maxLengthSlider = p.createSlider(10, 300, 30, 10);
         maxLengthSlider.position(inputWidth - sliderWidth, sliderPosY);
         maxLengthSlider.size(sliderWidth, sliderHeight);
-        createLabel('MAX LENGTH', inputWidth - sliderWidth + 15, sliderPosY + sliderHeight + 10);
+        createLabel('max length', inputWidth - sliderWidth + 30, sliderPosY + sliderHeight + 15);
 
-        // Create the canvas
+        // canvas
         canvas = p.createCanvas(windowWidth - 20, windowHeight - inputHeight - 100); // Adjust canvas height
         canvas.parent('sketch-container');
         canvas.position(10, 10);
@@ -78,8 +77,8 @@ const sketch = (p) => {
             }
     
             for (let j = 0; j < lines.length; j++) {
-                let x = 20 + scrollOffset; // Apply vertical scroll offset
-                x += horizontalScrollOffset; // Apply horizontal scroll offset
+                let x = 20 + scrollOffset; 
+                x += horizontalScrollOffset; 
     
                 canvas.text(lines[j], x, y);
                 y += p.textAscent() + p.textDescent();
@@ -87,9 +86,9 @@ const sketch = (p) => {
         }
     };
     
-    // Function to calculate the y position based on the index, scrolling offset, and accumulated height
+    // calculate the y position based on the index, scrolling offset, and accumulated height
     function calculateYPosition(index) {
-        let y = canvas.height - 30; // Start from the bottom of the canvas
+        let y = canvas.height - 30;
 
         for (let i = textLines.length - 1; i > index; i--) {
             let lines = textLines[i].text.split('\n');
@@ -110,11 +109,12 @@ const sketch = (p) => {
     
         if (userInput.trim() !== '' && !isGenerating) {   
 
-            textLines.push({ text: userInput + '\n', isInput: true, isError: false }); // User input
+            // display user input
+            textLines.push({ text: userInput + '\n', isInput: true, isError: false });
  
             isGenerating = true;
-            input.value('Generating...'); // Display "Generating..." in the input box
-            input.attribute('disabled', 'true'); // Disable user input
+            input.value('Generating...'); 
+            input.attribute('disabled', 'true'); // disable user input
             await generateText(userInput);
             isGenerating = false;
             scrollToBottom();
@@ -131,20 +131,18 @@ const sketch = (p) => {
         label.style.left = `${x}px`;
         label.style.top = `${y}px`;
         label.style.color = 'white'; 
+        label.style.fontFamily = 'Arial, sans-serif'; 
         document.getElementById('sketch-container').appendChild(label);
     }
     
-    // Updated scrollToBottom function
     function scrollToBottom() {
         scrollOffset = 0;
     }
 
-    // Function to handle mouse wheel events for scrolling
     p.mouseWheel = (event) => {
         scrollOffset -= event.delta / 100;
     };
     
-    // for horizontal scroll on the canvas
     p.mouseDragged = () => {
         if (
             p.mouseX > 10 && 
@@ -159,6 +157,7 @@ const sketch = (p) => {
 };
 
 new p5(sketch);
+
 async function generateText(promptText) {
     errorMessage = 'Server temporarily unavailable :( Please, try again in a few seconds!';
 
@@ -192,14 +191,13 @@ async function generateText(promptText) {
             throw new Error();
         }
 
-        result = await response.json(); // Assign value to result
+        result = await response.json(); 
 
-        // Check if result is defined 
         if (result) {
             const generatedText = result[0]["generated_text"];
             const formattedText = generatedText.startsWith(promptText) ? generatedText.substring(promptText.length) : generatedText;
 
-            // Store the formatted generated text
+            // Store the generated text without the prompt
             textLines.push({ text: formattedText, isInput: false, isError: false }); // Generated text
         } else {
             throw new Error();
