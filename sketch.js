@@ -43,11 +43,10 @@ const sketch = (p) => {
     };
 
     p.draw = () => {
-        p.background(30);     
-        
+        p.background(30);
+
         // Display error message on the screen
         p.fill(255, 0, 0);
-        p.text(errorMessage, 20, p.height - 50);
 
         for (let i = 0; i < textLines.length; i++) {
             let textData = textLines[i];
@@ -59,11 +58,11 @@ const sketch = (p) => {
 
             let y = p.height + textData.textY;
 
-            // Change color for generated text
+            // Change color based on whether it's an error or not
             if (textData.isInput) {
                 p.fill(255);
             } else {
-                p.fill(p.color(0, p.random(190,220), 0)); 
+                p.fill(textData.isError ? p.color(255, 0, 0) : p.color(0, p.random(190, 220), 0));
             }
 
             // Draw each line of text within window boundaries
@@ -99,67 +98,59 @@ new p5(sketch);
 async function generateText(promptText) {
 
     console.log(promptText);
-    errorMessage = ''; 
+    errorMessage = 'Server temporarily unavailable :( Please, try again in a few seconds!'; 
+
+    const HF_API_TOKEN = "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";
+    const model = "blasees/gpt2_bestpractices";
+
+    const temperature = temperatureSlider.value();
+    const maxLength = maxLengthSlider.value();
+
+    const data = {
+        inputs: promptText || " ",
+        parameters: {
+            temperature: temperature,
+            max_length: maxLength
+        }
+    };
+
+    let result; // Declare result outside the try block
 
     try {
-        const HF_API_TOKEN = "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";
-        const model = "blasees/gpt2_bestpractices";
-
-        const temperature = temperatureSlider.value();
-        const maxLength = maxLengthSlider.value();
-
-        const data = {
-            inputs: promptText || " ",
-            parameters: {
-                temperature: temperature,
-                max_length: maxLength
+        const response = await fetch(
+            `https://api-inference.huggingface.co/models/${model}`,
+            {
+                headers: { "Authorization": `Bearer ${HF_API_TOKEN}` },
+                method: "POST",
+                body: JSON.stringify(data),
             }
-        };
+        );
 
-        let result; // Declare result outside the try block
+        if (!response.ok) {
+            console.error('Inference response not ok. Possible API still loading.');
+            throw new Error(`Error found :( Please, try again in a few seconds!`);
+        }
 
-        try {
-            const response = await fetch(
-                `https://api-inference.huggingface.co/models/${model}`,
-                {
-                    headers: { "Authorization": `Bearer ${HF_API_TOKEN}` },
-                    method: "POST",
-                    body: JSON.stringify(data),
-                }
-            );
+        result = await response.json(); // Assign value to result
 
-            if (!response.ok) {
-                throw new Error(`Server temporarily unavailable :( Please, try again in a few seconds!`);
+        // Check if result is defined 
+        if (result) {
+            const generatedText = result[0]["generated_text"];
+            // Remove the promptText from the beginning of the generated text if it exists
+            const formattedText = generatedText.startsWith(promptText) ? generatedText.substring(promptText.length) : generatedText;
+
+            // Store the formatted generated text and its scroll position separately for each line
+            let lines = formattedText.split('\n');
+            for (let i = 0; i < lines.length; i++) {
+                textLines.push({ text: lines[i], textY: 0, isInput: false, isError: false });
             }
-
-            result = await response.json(); // Assign value to result
-
-            // Process the result as needed
-
-            // Check if result is defined before using it
-            if (result) {
-                const generatedText = result[0]["generated_text"];
-                // Remove the promptText from the beginning of the generated text if it exists
-                const formattedText = generatedText.startsWith(promptText) ? generatedText.substring(promptText.length) : generatedText;
-
-                // Store the formatted generated text and its scroll position separately for each line
-                let lines = formattedText.split('\n');
-                for (let i = 0; i < lines.length; i++) {
-                    textLines.push({ text: lines[i], textY: 0, isInput: false });
-                }
-            } else {
-                // Handle the case where result is not defined
-                console.error("No result available.");
-            }
-        } catch (error) {
-            // Handle errors here
-            errorMessage = `Error while generating text for prompt "${promptText}": ${error.message}`;
-            console.error(errorMessage);
-            textLines.push({ text: errorMessage, textY: 0, isInput: false, isError: true }); // Display error in the text stream with isError flag
+        } else {
+            // Handle the case where result is not defined
+            console.error('Inference response not ok. Possible API still loading.');
+            throw new Error(`Error found :( Please, try again in a few seconds!`);
         }
     } catch (error) {
-        errorMessage = `Error: ${error}`;
-        console.error(errorMessage);
-        textLines.push({ text: errorMessage, textY: 0, isInput: false, isError: true }); // Display error in the text stream with isError flag
+        console.error('POST failed. Likely an error with code for POST.');
+        textLines.push({ text: errorMessage, textY: 0, isInput: false, isError: true}); 
     }
 }
