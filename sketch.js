@@ -127,8 +127,8 @@ const sketch = (p) => {
             }
     
             for (let j = 0; j < lines.length; j++) {
-                let x = 20 + scrollOffset; 
-                x += horizontalScrollOffset; 
+                let x = 20 + scrollOffset;
+                x += horizontalScrollOffset;
     
                 canvas.text(lines[j], x, y);
                 y += p.textAscent() + p.textDescent();
@@ -139,18 +139,18 @@ const sketch = (p) => {
     // calculate the y position based on the index, scrolling offset, and accumulated height
     function calculateYPosition(index) {
         let y = canvas.height - 30;
-
+        const lineHeight = p.textAscent() + p.textDescent();
+    
         for (let i = textLines.length - 1; i > index; i--) {
             let lines = textLines[i].text.split('\n');
-            y -= lines.length * 30;
+            y -= lines.length * lineHeight;
         }
-
-        const lineHeight = p.textAscent() + p.textDescent();
-        
+    
         y +=  p.lerp(scrollOffset * lineHeight, (scrollOffset + 1) * lineHeight, 0.1);
-
+    
         return y;
     }
+    
 
     async function handleInput() {
 
