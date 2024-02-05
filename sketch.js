@@ -5,9 +5,15 @@ let isGenerating = false;
 
 let temperatureSlider;
 let maxLengthSlider;
+let topKSlider;
+let lengthPenaltySlider;
+let noRepeatNGramSlider;
 
 let scrollOffset = 0; 
 let horizontalScrollOffset = 0;
+
+let infoDiv;
+let infoButton;
 
 const sketch = (p) => {
 
@@ -22,6 +28,31 @@ const sketch = (p) => {
         inputDiv = document.createElement('div');
         inputDiv.id = 'input-container';
         document.body.appendChild(inputDiv);
+
+        // info div
+        infoDiv = document.createElement('div');
+        infoDiv.id = 'info-container';
+        infoDiv.style.position = 'absolute';
+        infoDiv.style.top = '10px';
+        infoDiv.style.left = '10px';
+        infoDiv.style.color = 'white';
+        infoDiv.style.fontFamily = 'Arial, sans-serif';
+        infoDiv.style.display = 'none'
+        document.body.appendChild(infoDiv);
+        updateInfo();  
+        
+        infoButton = document.createElement('button');
+        infoButton.innerHTML = '<i>ℹ️</i>'; // ℹ️ is the information icon
+        infoButton.style.position = 'absolute';
+        infoButton.style.top = '10px';
+        infoButton.style.right = '10px';
+        infoButton.style.backgroundColor = 'transparent';
+        infoButton.style.border = 'none';
+        infoButton.style.color = 'white';
+        infoButton.style.fontSize = '20px';
+        infoButton.style.cursor = 'pointer';
+        infoButton.addEventListener('click', toggleInfoVisibility);
+        document.body.appendChild(infoButton);
     
         // the input text box
         const inputWidth = windowWidth - 100;
@@ -33,21 +64,40 @@ const sketch = (p) => {
         input.position(posX, posY);
         input.size(inputWidth, inputHeight);
         input.changed(handleInput);
-    
-         // temperature slider
+
         const sliderWidth = 140;
         const sliderHeight = 20;
         const sliderPosY = windowHeight - inputHeight - 40;
-        temperatureSlider = p.createSlider(0.01, 1, 0.5, 0.01);
-        temperatureSlider.position(windowWidth - inputWidth, sliderPosY);
-        temperatureSlider.size(sliderWidth, sliderHeight);
-        createLabel('temperature', windowWidth - inputWidth + 25, sliderPosY + sliderHeight + 15);
 
-        // size slider
-        maxLengthSlider = p.createSlider(10, 300, 30, 10);
-        maxLengthSlider.position(inputWidth - sliderWidth, sliderPosY);
+        // temperature slider
+        temperatureSlider = p.createSlider(0.01, 1, 0.5, 0.01);
+        temperatureSlider.position(windowWidth - inputWidth - 30, sliderPosY);
+        temperatureSlider.size(sliderWidth, sliderHeight);
+        createLabel('temperature', windowWidth - inputWidth - 30, sliderPosY + sliderHeight + 15);
+
+        // max length slider
+        maxLengthSlider = p.createSlider(50, 500, 100, 10);
+        maxLengthSlider.position(windowWidth - inputWidth + sliderWidth - 10, sliderPosY);
         maxLengthSlider.size(sliderWidth, sliderHeight);
-        createLabel('max length', inputWidth - sliderWidth + 30, sliderPosY + sliderHeight + 15);
+        createLabel('max length', windowWidth - inputWidth + sliderWidth - 10, sliderPosY + sliderHeight + 15);
+
+        // top-k slider
+        topKSlider = p.createSlider(1, 100, 50, 1);
+        topKSlider.position(windowWidth - inputWidth + 2 * sliderWidth + 10, sliderPosY);
+        topKSlider.size(sliderWidth, sliderHeight);
+        createLabel('top-k', windowWidth - inputWidth + 2 * sliderWidth + 10, sliderPosY + sliderHeight + 15);
+
+        // length penalty slider
+        lengthPenaltySlider = p.createSlider(0.1, 2, 1, 0.1);
+        lengthPenaltySlider.position( windowWidth - inputWidth + 3 * sliderWidth + 30, sliderPosY);
+        lengthPenaltySlider.size(sliderWidth, sliderHeight);
+        createLabel('length penalty',  windowWidth - inputWidth + 3 * sliderWidth + 30, sliderPosY + sliderHeight + 15);
+
+        // noRepeatNGramSlider slider
+        noRepeatNGramSlider = p.createSlider(1, 10, 2, 1);
+        noRepeatNGramSlider.position(windowWidth - inputWidth + 4 * sliderWidth + 50, sliderPosY);
+        noRepeatNGramSlider.size(sliderWidth, sliderHeight);
+        createLabel('no repeat n-grams', windowWidth - inputWidth + 4 * sliderWidth + 50, sliderPosY + sliderHeight + 15);
 
         // canvas
         canvas = p.createCanvas(windowWidth - 20, windowHeight - inputHeight - 100); // Adjust canvas height
@@ -110,7 +160,7 @@ const sketch = (p) => {
         if (userInput.trim() !== '' && !isGenerating) {   
 
             // display user input
-            textLines.push({ text: userInput + '\n', isInput: true, isError: false });
+            textLines.push({ text: userInput + '...' + '\n', isInput: true, isError: false });
  
             isGenerating = true;
             input.value('Generating...'); 
@@ -133,6 +183,21 @@ const sketch = (p) => {
         label.style.color = 'white'; 
         label.style.fontFamily = 'Arial, sans-serif'; 
         document.getElementById('sketch-container').appendChild(label);
+    }
+
+    function updateInfo() {
+        infoDiv.innerHTML = `
+            <p><strong>Temperature:</strong> Controls randomness. Higher values (closer to 1) make output more random, lower values (closer to 0) make it more focused.</p>
+            <p><strong>Max Length:</strong> Specifies the maximum length of generated text in characters. Stops generation when this length is reached.</p>
+            <p><strong>Top-K:</strong> Limits vocabulary to the top-K most probable tokens. Controls diversity of generated text.</p>
+            <p><strong>Length Penalty:</strong> Influences text length. Values > 1 encourage longer outputs, < 1 encourage shorter outputs.</p>
+            <p><strong>No Repeat N-gram Size:</strong> Applies a penalty for repeating n-grams in the generated text. Prevents the repetition of specific sequences.</p>
+        `;
+    }
+    
+
+    function toggleInfoVisibility() {
+        infoDiv.style.display = infoDiv.style.display === 'none' ? 'block' : 'none';
     }
     
     function scrollToBottom() {
@@ -162,19 +227,29 @@ async function generateText(promptText) {
     errorMessage = 'Server temporarily unavailable :( Please, try again in a few seconds!';
 
     const HF_API_TOKEN = "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";
-    const model = "blasees/gpt2_bestpractices_chats";
+    const model = "blasees/gpt2_chats_proposals";
 
     let result;
 
     const temperature = temperatureSlider.value();
     const maxLength = maxLengthSlider.value();
-
+    const topK = topKSlider.value();
+    const lengthPenalty = lengthPenaltySlider.value();
+    const noRepeatNGram = noRepeatNGramSlider.value();
+    
     const data = {
         inputs: promptText || " ",
         parameters: {
             temperature: temperature,
-            max_length: maxLength
+            max_length: maxLength,            
+            top_k: topK,
+            length_penalty: lengthPenalty,
+            num_beams: 5, // compare 5 beams
+            no_repeat_ngram_size: noRepeatNGram, // n-gram penalty (no 2-ngrams appear twice)
+            num_return_sequences: 1, // return just one beam
+            early_stopping: true,    
         }
+    
     };
 
     try {
@@ -195,10 +270,9 @@ async function generateText(promptText) {
 
         if (result) {
             const generatedText = result[0]["generated_text"];
-            const formattedText = generatedText.startsWith(promptText) ? generatedText.substring(promptText.length) : generatedText;
 
             // Store the generated text without the prompt
-            textLines.push({ text: formattedText, isInput: false, isError: false }); // Generated text
+            textLines.push({ text: generatedText, isInput: false, isError: false }); // Generated text
         } else {
             throw new Error();
         }
