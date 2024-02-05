@@ -136,7 +136,7 @@ const sketch = (p) => {
         }
     };
     
-    // calculate the y position based on the index, scrolling offset, and accumulated height
+    // [fix] calculate the y position based on the index, scrolling offset, and accumulated height
     function calculateYPosition(index) {
         let y = canvas.height - 30;
         const lineHeight = p.textAscent() + p.textDescent();
